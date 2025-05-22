@@ -1,0 +1,51 @@
+# Gaming Voice Chat Translator - Requirements
+# Core dependencies for voice recognition, translation, and TTS
+
+# === CORE DEPENDENCIES (Required) ===
+# Audio processing and speech recognition
+pyaudio>=0.2.11
+SpeechRecognition>=3.10.0
+
+# Translation services
+googletrans==4.0.0-rc1
+
+# Text-to-speech
+pyttsx3>=2.90
+
+# GUI framework (usually included with Python)
+# tkinter - included with most Python installations
+
+# === OPTIONAL DEPENDENCIES ===
+# Enhanced TTS with Google TTS
+gtts>=2.3.2
+pygame>=2.5.2
+
+# Network requests for LibreTranslate
+requests>=2.31.0
+
+# Session export capabilities
+reportlab>=4.0.4
+
+# === ADVANCED FEATURES (Optional) ===
+# WhisperX for improved speech recognition (requires separate installation)
+# pip install git+https://github.com/m-bain/whisperx.git
+
+# PyTorch for WhisperX (if using GPU acceleration)
+# torch>=2.0.0
+# torchaudio>=2.0.0
+
+# === DEVELOPMENT DEPENDENCIES (Optional) ===
+# Only needed for development and building
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0
+# mypy>=1.5.0
+
+# === PLATFORM-SPECIFIC (Optional) ===
+# Windows-specific dependencies
+# pywin32>=306  # Windows only
+
+# === CONSTRAINTS ===
+# Ensure compatibility
+numpy>=1.21.0,<2.0.0
+six>=1.16.0
