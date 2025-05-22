@@ -1,0 +1,42 @@
+gaming_translator/
+├── core/
+│   ├── voice_recognizer.py     ← Voice recognition settings
+│   ├── translator.py           ← Translation logic  
+│   ├── synthesizer.py          ← Text-to-speech
+│   └── session_manager.py      ← Session/export features
+├── ui/
+│   ├── main_window.py          ← Main GUI appearance/behavior
+│   └── overlay.py              ← Gaming overlay
+├── utils/
+│   ├── constants.py            ← Settings, languages, colors
+│   ├── config.py               ← Configuration management
+│   └── autohotkey_bridge.py    ← Game integration
+└── __main__.py                 ← Startup and CLI options
+
+ BUILD ARTIFACTS (Auto-Generated - Don't Edit)
+Folders to NEVER manually edit:
+
+dist/ - Contains your built .exe (auto-generated)
+build/ - Build cache (auto-generated)
+__pycache__/ - Python cache (auto-generated)
+tests/ - Test files (safe to modify, but not needed for basic changes)
+
+Files that are auto-generated:
+
+build_full_mixed.txt - Build log/output
+enhanced_config.env - Generated config
+Anything in dist/ or build/
+
+🚫 HANDS OFF (Will Break Things)
+
+Never edit files in dist/ - Your .exe lives there
+Never edit files in build/ - PyInstaller cache
+Don't manually edit __pycache__ - Python cache
+Don't edit .pyc files - Compiled Python
+
+🔄 Your Workflow
+
+Edit source code in gaming_translator/ folder
+Test changes: python -m gaming_translator
+When ready: Run your rebuild script
+New .exe appears in dist/GamingTranslator/

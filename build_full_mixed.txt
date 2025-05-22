@@ -1,0 +1,482 @@
+# =============================================================================
+# Complete Build and Test System for Gaming Voice Chat Translator
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. requirements-dev.txt - Development Dependencies
+# -----------------------------------------------------------------------------
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# pytest-mock>=3.10.0
+# pytest-asyncio>=0.21.0
+# black>=22.1.0
+# isort>=5.10.1
+# flake8>=5.0.0
+# mypy>=1.0.0
+# pyinstaller>=5.7.0
+# python-dotenv>=1.0.0
+# setuptools>=65.0.0
+# wheel>=0.38.0
+# twine>=4.0.0
+
+# -----------------------------------------------------------------------------
+# 2. pytest.ini - Pytest Configuration
+# -----------------------------------------------------------------------------
+# [tool:pytest]
+# testpaths = tests
+# python_files = test_*.py
+# python_classes = Test*
+# python_functions = test_*
+# addopts = 
+#     --verbose
+#     --tb=short
+#     --cov=gaming_translator
+#     --cov-report=html
+#     --cov-report=term-missing
+#     --cov-fail-under=80
+# markers =
+#     slow: marks tests as slow (deselect with '-m "not slow"')
+#     integration: marks tests as integration tests
+#     gpu: marks tests as requiring GPU support
+# filterwarnings =
+#     ignore::DeprecationWarning
+#     ignore::PendingDeprecationWarning
+
+# -----------------------------------------------------------------------------
+# 3. .github/workflows/ci.yml - GitHub Actions CI
+# -----------------------------------------------------------------------------
+# name: CI/CD Pipeline
+# 
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main ]
+#   release:
+#     types: [published]
+# 
+# jobs:
+#   test:
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       matrix:
+#         os: [ubuntu-latest, windows-latest, macos-latest]
+#         python-version: ["3.8", "3.9", "3.10", "3.11"]
+#     
+#     steps:
+#     - uses: actions/checkout@v3
+#     
+#     - name: Set up Python ${{ matrix.python-version }}
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: ${{ matrix.python-version }}
+#     
+#     - name: Install system dependencies (Ubuntu)
+#       if: runner.os == 'Linux'
+#       run: |
+#         sudo apt-get update
+#         sudo apt-get install -y portaudio19-dev
+#     
+#     - name: Install system dependencies (macOS)
+#       if: runner.os == 'macOS'
+#       run: |
+#         brew install portaudio
+#     
+#     - name: Install Python dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         pip install -r requirements-dev.txt
+#         pip install -e .
+#     
+#     - name: Run tests
+#       run: |
+#         pytest --cov=gaming_translator --cov-report=xml
+#     
+#     - name: Upload coverage to Codecov
+#       uses: codecov/codecov-action@v3
+#       with:
+#         file: ./coverage.xml
+# 
+#   build:
+#     needs: test
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       matrix:
+#         os: [ubuntu-latest, windows-latest, macos-latest]
+#     
+#     steps:
+#     - uses: actions/checkout@v3
+#     
+#     - name: Set up Python 3.10
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: "3.10"
+#     
+#     - name: Install dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         pip install pyinstaller
+#         pip install -e .
+#     
+#     - name: Build executable
+#       run: |
+#         pyinstaller gaming_translator.spec
+#     
+#     - name: Upload artifacts
+#       uses: actions/upload-artifact@v3
+#       with:
+#         name: gaming-translator-${{ matrix.os }}
+#         path: dist/
+
+# -----------------------------------------------------------------------------
+# 4. Makefile - Build Automation
+# -----------------------------------------------------------------------------
+
+#!/usr/bin/make -f
+# Gaming Voice Chat Translator - Build Automation
+
+.PHONY: help install install-dev test test-coverage lint format clean build build-exe package docs
+
+# Default target
+help:
+	@echo "Gaming Voice Chat Translator - Build Commands"
+	@echo "=============================================="
+	@echo ""
+	@echo "Setup:"
+	@echo "  install     Install the package"
+	@echo "  install-dev Install development dependencies"
+	@echo ""
+	@echo "Development:"
+	@echo "  test        Run tests"
+	@echo "  test-cov    Run tests with coverage"
+	@echo "  lint        Run linting checks"
+	@echo "  format      Format code with black and isort"
+	@echo ""
+	@echo "Build:"
+	@echo "  clean       Clean build artifacts"
+	@echo "  build       Build Python package"
+	@echo "  build-exe   Build standalone executable"
+	@echo "  package     Create distribution packages"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  docs        Build documentation"
+
+# Installation
+install:
+	pip install -e .
+
+install-dev:
+	pip install -e .
+	pip install -r requirements-dev.txt
+
+# Testing
+test:
+	pytest tests/
+
+test-cov:
+	pytest tests/ --cov=gaming_translator --cov-report=html --cov-report=term
+
+test-integration:
+	pytest tests/ -m integration
+
+test-unit:
+	pytest tests/ -m "not integration"
+
+# Code quality
+lint:
+	flake8 gaming_translator tests
+	mypy gaming_translator
+	black --check gaming_translator tests
+	isort --check-only gaming_translator tests
+
+format:
+	black gaming_translator tests
+	isort gaming_translator tests
+
+# Build
+clean:
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info/
+	rm -rf .pytest_cache/
+	rm -rf htmlcov/
+	rm -rf .coverage
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+
+build:
+	python setup.py sdist bdist_wheel
+
+build-exe:
+	pyinstaller gaming_translator.spec
+
+package: clean build build-exe
+	@echo "Created distribution packages:"
+	@ls -la dist/
+
+# Documentation
+docs:
+	@echo "Generating documentation..."
+	@echo "TODO: Add documentation generation"
+
+# Release
+release-test:
+	twine upload --repository testpypi dist/*
+
+release:
+	twine upload dist/*
+
+# Development helpers
+dev-setup: install-dev
+	@echo "Development environment ready!"
+	@echo "Run 'make test' to run tests"
+	@echo "Run 'make build-exe' to build executable"
+
+run-gui:
+	python -m gaming_translator
+
+run-cli:
+	python -m gaming_translator --headless --device 0
+
+run-test-translate:
+	python -m gaming_translator --translate "Hello world" --target es
+
+# -----------------------------------------------------------------------------
+# 5. build.py - Cross-Platform Build Script
+# -----------------------------------------------------------------------------
+
+#!/usr/bin/env python3
+"""
+Cross-platform build script for Gaming Voice Chat Translator
+"""
+
+import os
+import sys
+import subprocess
+import platform
+import shutil
+from pathlib import Path
+
+class BuildManager:
+    """Manages the build process across platforms"""
+    
+    def __init__(self):
+        self.platform = platform.system()
+        self.base_dir = Path(__file__).parent
+        self.dist_dir = self.base_dir / "dist"
+        self.build_dir = self.base_dir / "build"
+    
+    def clean(self):
+        """Clean previous build artifacts"""
+        print("🧹 Cleaning previous builds...")
+        
+        for dir_path in [self.dist_dir, self.build_dir]:
+            if dir_path.exists():
+                shutil.rmtree(dir_path)
+                print(f"   Removed {dir_path}")
+        
+        # Clean Python cache
+        for cache_dir in self.base_dir.rglob("__pycache__"):
+            shutil.rmtree(cache_dir)
+        
+        print("✅ Clean completed")
+    
+    def install_dependencies(self):
+        """Install required dependencies"""
+        print("📦 Installing dependencies...")
+        
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], check=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "pyinstaller"], check=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "-e", "."], check=True)
+            print("✅ Dependencies installed")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to install dependencies: {e}")
+            return False
+    
+    def run_tests(self):
+        """Run test suite"""
+        print("🧪 Running tests...")
+        
+        try:
+            result = subprocess.run([sys.executable, "-m", "pytest", "tests/", "-v"], 
+                                  capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                print("✅ All tests passed")
+                return True
+            else:
+                print("❌ Some tests failed:")
+                print(result.stdout)
+                print(result.stderr)
+                return False
+        except FileNotFoundError:
+            print("⚠️  pytest not found, skipping tests")
+            return True
+    
+    def build_executable(self):
+        """Build standalone executable"""
+        print(f"🏗️  Building executable for {self.platform}...")
+        
+        try:
+            subprocess.run([sys.executable, "-m", "PyInstaller", "gaming_translator.spec"], check=True)
+            print("✅ Executable built successfully")
+            
+            # Show output location
+            if self.platform == "Darwin":
+                exe_path = self.dist_dir / "GamingTranslator.app"
+            elif self.platform == "Windows":
+                exe_path = self.dist_dir / "GamingTranslator" / "GamingTranslator.exe"
+            else:
+                exe_path = self.dist_dir / "GamingTranslator" / "GamingTranslator"
+            
+            if exe_path.exists():
+                print(f"📍 Executable location: {exe_path}")
+                return True
+            else:
+                print("❌ Executable not found at expected location")
+                return False
+                
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Build failed: {e}")
+            return False
+    
+    def create_installer(self):
+        """Create platform-specific installer"""
+        print(f"📦 Creating installer for {self.platform}...")
+        
+        if self.platform == "Windows":
+            # Create NSIS installer script if NSIS is available
+            nsis_script = self.base_dir / "GamingTranslator.nsi"
+            if nsis_script.exists():
+                try:
+                    subprocess.run(["makensis", str(nsis_script)], check=True)
+                    print("✅ Windows installer created")
+                    return True
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    print("⚠️  NSIS not found, skipping installer creation")
+        
+        elif self.platform == "Darwin":
+            # Create DMG for macOS
+            try:
+                app_path = self.dist_dir / "GamingTranslator.app"
+                dmg_path = self.dist_dir / "GamingTranslator.dmg"
+                
+                subprocess.run([
+                    "hdiutil", "create", "-volname", "Gaming Translator",
+                    "-srcfolder", str(app_path), "-ov", "-format", "UDZO",
+                    str(dmg_path)
+                ], check=True)
+                
+                print("✅ macOS DMG created")
+                return True
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                print("⚠️  DMG creation failed")
+        
+        else:
+            # Linux - create AppImage or .deb package
+            print("⚠️  Linux installer creation not implemented")
+        
+        return False
+    
+    def build_all(self, skip_tests=False):
+        """Run complete build process"""
+        print("🚀 Starting complete build process...")
+        print(f"Platform: {self.platform}")
+        print(f"Python: {sys.version}")
+        print("-" * 50)
+        
+        # Step 1: Clean
+        self.clean()
+        
+        # Step 2: Install dependencies
+        if not self.install_dependencies():
+            return False
+        
+        # Step 3: Run tests (optional)
+        if not skip_tests:
+            if not self.run_tests():
+                response = input("Tests failed. Continue anyway? (y/N): ")
+                if response.lower() != 'y':
+                    return False
+        
+        # Step 4: Build executable
+        if not self.build_executable():
+            return False
+        
+        # Step 5: Create installer
+        self.create_installer()
+        
+        print("-" * 50)
+        print("🎉 Build process completed!")
+        
+        # Show final results
+        if self.dist_dir.exists():
+            print("\n📂 Build outputs:")
+            for item in self.dist_dir.iterdir():
+                print(f"   {item}")
+        
+        return True
+
+def main():
+    """Main build script entry point"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Build Gaming Voice Chat Translator")
+    parser.add_argument("--clean-only", action="store_true", help="Only clean build artifacts")
+    parser.add_argument("--skip-tests", action="store_true", help="Skip running tests")
+    parser.add_argument("--exe-only", action="store_true", help="Only build executable")
+    
+    args = parser.parse_args()
+    
+    builder = BuildManager()
+    
+    if args.clean_only:
+        builder.clean()
+    elif args.exe_only:
+        builder.build_executable()
+    else:
+        success = builder.build_all(skip_tests=args.skip_tests)
+        sys.exit(0 if success else 1)
+
+if __name__ == "__main__":
+    main()
+
+# -----------------------------------------------------------------------------
+# 6. Enhanced setup.py with All Features
+# -----------------------------------------------------------------------------
+
+# Add these enhancements to your existing setup.py:
+
+# Enhanced development dependencies
+dev_requirements = [
+    'pytest>=7.0.0',
+    'pytest-cov>=4.0.0',
+    'pytest-mock>=3.10.0',
+    'black>=22.1.0',
+    'isort>=5.10.1',
+    'flake8>=5.0.0',
+    'mypy>=1.0.0',
+    'pyinstaller>=5.7.0',
+    'python-dotenv>=1.0.0',
+]
+
+# Add to optional_requirements in setup.py:
+optional_requirements['dev'] = dev_requirements
+optional_requirements['all'] = (
+    optional_requirements['whisperx'] + 
+    optional_requirements['dev']
+)
+
+print("🎯 Complete build system ready!")
+print("\nUsage:")
+print("  python build.py                 # Full build process")
+print("  python build.py --exe-only      # Build executable only")
+print("  python build.py --skip-tests    # Skip tests")
+print("  python build.py --clean-only    # Clean only")
+print("\nOr use Make commands:")
+print("  make install-dev    # Setup development environment")
+print("  make test           # Run tests")
+print("  make build-exe      # Build executable")
+print("  make package        # Create all distribution packages")
